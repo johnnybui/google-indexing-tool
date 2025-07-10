@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google Indexing Tool</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 class="title">⚡ Google Indexing Tool</h1>
+        <p class="subtitle">Bulk URL Submission for Google Indexing API</p>
+        <p class="description">
+          Submit up to 200 URLs per day • Developer-friendly interface
+        </p>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ Important:</strong> This tool is for educational/development
+        purposes. Google officially recommends using the Indexing API only for
+        JobPosting and BroadcastEvent content. Daily limit: 200 URLs.
+      </div>
+
+      <form id="indexingForm" class="main-form">
+        <div class="form-group">
+          <label for="urls">Enter URLs (one per line):</label>
+          <textarea
+            id="urls"
+            name="urls"
+            class="url-input"
+            placeholder="https://example.com/page1&#10;https://example.com/page2&#10;https://example.com/page3"
+            required
+          ></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          🚀 Submit URLs for Indexing
+        </button>
+      </form>
+
+      <div class="loading" id="loading">
+        <div class="pulse">⏳ Processing URLs... Please wait</div>
+      </div>
+
+      <div class="results" id="results">
+        <h3>📊 Results</h3>
+        <div id="resultsContent"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Made with ❤️ for developers • Built with Bun + Hono</p>
+      <p>⚠️ Use responsibly and follow Google's API terms of service</p>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

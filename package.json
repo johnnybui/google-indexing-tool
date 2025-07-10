@@ -1,6 +1,6 @@
 {
   "name": "google-indexing-tool",
-  "version": "0.1.1",
+  "version": "0.3.0",
   "description": "A Bun-based tool for bulk Google Indexing API requests with a modern dark-themed UI",
   "main": "src/server.ts",
   "scripts": {
