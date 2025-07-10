@@ -5,6 +5,7 @@ A modern, dark-themed web application built with Bun for bulk Google Indexing AP
 ## Features
 
 - 🚀 **Bulk URL Processing**: Submit multiple URLs (up to 200 per day)
+- 📡 **Real-time Streaming**: See results as they process with Server-Sent Events
 - 🌙 **Dark Theme**: Modern, developer-friendly interface
 - ⚡ **Bun Runtime**: Fast TypeScript execution
 - 🎯 **Individual API Calls**: Each URL processed separately for reliable results
@@ -107,9 +108,12 @@ https://example.com/page3
 ## API Endpoints
 
 - `GET /` - Serve the main application
-- `POST /api/index` - Submit URLs for Google indexing
+- `POST /api/index` - Submit URLs for Google indexing (batch processing)
+- `POST /api/index/stream` - Submit URLs with real-time streaming results
 
-### Request Format
+### Batch Processing (`POST /api/index`)
+
+#### Request Format
 
 ```json
 {
@@ -120,7 +124,7 @@ https://example.com/page3
 }
 ```
 
-### Response Format
+#### Response Format
 
 ```json
 {
@@ -140,6 +144,80 @@ https://example.com/page3
     "total": 2,
     "successful": 1,
     "failed": 1
+  }
+}
+```
+
+### Streaming Processing (`POST /api/index/stream`)
+
+The streaming endpoint processes URLs one by one and sends results in real-time using Server-Sent Events (SSE).
+
+#### Request Format
+
+Same as batch processing:
+
+```json
+{
+  "urls": [
+    "https://example.com/page1",
+    "https://example.com/page2"
+  ]
+}
+```
+
+#### Response Format
+
+The response is a stream of Server-Sent Events. Each event contains JSON data:
+
+**Individual Result Events:**
+```
+data: {"type":"result","url":"https://example.com/page1","success":true,"response":{...}}
+
+data: {"type":"result","url":"https://example.com/page2","success":false,"error":"Error message"}
+```
+
+**Final Summary Event:**
+```
+data: {"type":"summary","total":2,"successful":1,"failed":1}
+```
+
+#### Usage with curl
+
+```bash
+curl -X POST http://localhost:7920/api/index/stream \
+  -H "Content-Type: application/json" \
+  -d '{"urls":["https://example.com/page1","https://example.com/page2"]}' \
+  --no-buffer
+```
+
+#### Usage with JavaScript
+
+```javascript
+const response = await fetch('/api/index/stream', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ urls: ['https://example.com/page1'] })
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  
+  const chunk = decoder.decode(value);
+  const lines = chunk.split('\n');
+  
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const data = JSON.parse(line.slice(6));
+      if (data.type === 'result') {
+        console.log('URL processed:', data.url, data.success);
+      } else if (data.type === 'summary') {
+        console.log('Final summary:', data);
+      }
+    }
   }
 }
 ```
