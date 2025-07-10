@@ -13,7 +13,7 @@ A modern, dark-themed web application built with Bun for bulk Google Indexing AP
 
 ## Prerequisites
 
-- [Bun](https://bun.sh/) v1.0.0 or higher
+- [Bun](https://bun.sh/) v1.2.0 or higher
 - Google Cloud Platform account
 - Google Search Console property verification
 
