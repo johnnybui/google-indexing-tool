@@ -38,8 +38,8 @@ app.get('/', (c) => {
         
         body {
           font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-          background: #0a0a0a;
-          color: #00ff00;
+          background: #0d1117;
+          color: #e6edf3;
           line-height: 1.6;
           min-height: 100vh;
           display: flex;
@@ -57,31 +57,32 @@ app.get('/', (c) => {
           text-align: center;
           margin-bottom: 3rem;
           padding: 2rem;
-          border: 2px solid #00ff00;
+          border: 2px solid #30363d;
           border-radius: 10px;
-          background: rgba(0, 255, 0, 0.05);
+          background: #161b22;
         }
         
         .title {
           font-size: 2.5rem;
           margin-bottom: 1rem;
-          text-shadow: 0 0 10px #00ff00;
+          color: #58a6ff;
+          text-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
         }
         
         .subtitle {
           font-size: 1.2rem;
-          color: #00aa00;
+          color: #79c0ff;
           margin-bottom: 0.5rem;
         }
         
         .description {
-          color: #888;
+          color: #8b949e;
           font-size: 0.9rem;
         }
         
         .main-form {
-          background: rgba(0, 255, 0, 0.03);
-          border: 1px solid #00ff00;
+          background: #161b22;
+          border: 1px solid #30363d;
           border-radius: 10px;
           padding: 2rem;
           margin-bottom: 2rem;
@@ -95,17 +96,17 @@ app.get('/', (c) => {
           display: block;
           margin-bottom: 0.5rem;
           font-weight: 600;
-          color: #00ff00;
+          color: #f0f6fc;
         }
         
         .url-input {
           width: 100%;
           min-height: 200px;
-          background: #111;
-          border: 2px solid #333;
+          background: #0d1117;
+          border: 2px solid #30363d;
           border-radius: 5px;
           padding: 1rem;
-          color: #00ff00;
+          color: #e6edf3;
           font-family: inherit;
           font-size: 0.9rem;
           line-height: 1.5;
@@ -114,13 +115,13 @@ app.get('/', (c) => {
         
         .url-input:focus {
           outline: none;
-          border-color: #00ff00;
-          box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+          border-color: #58a6ff;
+          box-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
         }
         
         .submit-btn {
-          background: linear-gradient(45deg, #00ff00, #00aa00);
-          color: #000;
+          background: linear-gradient(45deg, #238636, #2ea043);
+          color: #ffffff;
           border: none;
           padding: 1rem 2rem;
           font-size: 1rem;
@@ -133,14 +134,14 @@ app.get('/', (c) => {
         }
         
         .submit-btn:hover {
-          background: linear-gradient(45deg, #00aa00, #008800);
+          background: linear-gradient(45deg, #2ea043, #238636);
           transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+          box-shadow: 0 5px 15px rgba(46, 160, 67, 0.4);
         }
         
         .submit-btn:disabled {
-          background: #333;
-          color: #666;
+          background: #30363d;
+          color: #8b949e;
           cursor: not-allowed;
           transform: none;
         }
@@ -148,8 +149,8 @@ app.get('/', (c) => {
         .results {
           margin-top: 2rem;
           padding: 1.5rem;
-          background: #111;
-          border: 1px solid #333;
+          background: #161b22;
+          border: 1px solid #30363d;
           border-radius: 10px;
           display: none;
         }
@@ -159,7 +160,7 @@ app.get('/', (c) => {
         }
         
         .results h3 {
-          color: #00ff00;
+          color: #58a6ff;
           margin-bottom: 1rem;
           font-size: 1.3rem;
         }
@@ -167,19 +168,19 @@ app.get('/', (c) => {
         .result-item {
           margin-bottom: 1rem;
           padding: 1rem;
-          background: rgba(0, 255, 0, 0.05);
-          border-left: 4px solid #00ff00;
+          background: #0d1117;
+          border-left: 4px solid #2ea043;
           border-radius: 5px;
         }
         
         .result-item.error {
-          border-left-color: #ff4444;
-          background: rgba(255, 68, 68, 0.05);
+          border-left-color: #f85149;
+          background: #0d1117;
         }
         
         .result-url {
           font-weight: 600;
-          color: #00ff00;
+          color: #79c0ff;
           word-break: break-all;
         }
         
@@ -189,17 +190,18 @@ app.get('/', (c) => {
         }
         
         .success {
-          color: #00ff00;
+          color: #2ea043;
         }
         
         .error {
-          color: #ff4444;
+          color: #f85149;
         }
         
         .summary {
           margin-top: 1.5rem;
           padding: 1rem;
-          background: rgba(0, 255, 0, 0.1);
+          background: #161b22;
+          border: 1px solid #30363d;
           border-radius: 5px;
           text-align: center;
         }
@@ -207,7 +209,7 @@ app.get('/', (c) => {
         .loading {
           display: none;
           text-align: center;
-          color: #00ff00;
+          color: #58a6ff;
           font-size: 1.1rem;
         }
         
@@ -218,22 +220,22 @@ app.get('/', (c) => {
         .footer {
           text-align: center;
           padding: 2rem;
-          border-top: 1px solid #333;
-          color: #666;
+          border-top: 1px solid #30363d;
+          color: #8b949e;
           font-size: 0.8rem;
         }
         
         .warning {
-          background: rgba(255, 165, 0, 0.1);
-          border: 1px solid #ffa500;
+          background: #1c2128;
+          border: 1px solid #d29922;
           border-radius: 5px;
           padding: 1rem;
           margin-bottom: 2rem;
-          color: #ffa500;
+          color: #e3b341;
         }
         
         .warning strong {
-          color: #ff8c00;
+          color: #f2cc60;
         }
         
         @keyframes pulse {
