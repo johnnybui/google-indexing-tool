@@ -133,6 +133,68 @@ export async function indexUrls(urls: string[]): Promise<IndexingResult[]> {
 }
 
 /**
+ * Submit multiple URLs to Google Indexing API with streaming results
+ * Each URL is processed individually and yielded as it completes
+ */
+export async function* indexUrlsStream(
+  urls: string[]
+): AsyncGenerator<
+  IndexingResult | { type: 'summary'; data: { total: number; successful: number; failed: number } }
+> {
+  console.log(`📋 Processing ${urls.length} URLs for indexing...`);
+
+  const results: IndexingResult[] = [];
+
+  // Process URLs one by one to avoid rate limiting
+  for (const url of urls) {
+    console.log(`🔄 Processing: ${url}`);
+
+    try {
+      const result = await indexSingleUrl(url);
+      results.push(result);
+
+      if (result.success) {
+        console.log(`✅ Successfully submitted: ${url}`);
+      } else {
+        console.log(`❌ Failed to submit: ${url} - ${result.error}`);
+      }
+
+      // Yield the individual result
+      yield result;
+    } catch (error) {
+      console.error(`💥 Unexpected error processing ${url}:`, error);
+      const errorResult: IndexingResult = {
+        url,
+        success: false,
+        error: 'Unexpected error occurred',
+      };
+      results.push(errorResult);
+      yield errorResult;
+    }
+
+    // Add a small delay between requests to be respectful to the API
+    if (urls.indexOf(url) < urls.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+
+  const successful = results.filter((r) => r.success).length;
+  const failed = results.filter((r) => !r.success).length;
+
+  console.log(`📊 Results: ${successful} successful, ${failed} failed, ${results.length} total`);
+
+  // Yield the final summary
+  yield {
+    type: 'summary' as const,
+    data: {
+      total: results.length,
+      successful,
+      failed,
+    },
+  };
+}
+
+/**
  * Check if service account credentials are properly configured
  */
 export function checkServiceAccountSetup(): {

@@ -41,3 +41,14 @@ export interface ServiceAccountCredentials {
   auth_provider_x509_cert_url: string;
   client_x509_cert_url: string;
 }
+
+export interface StreamingSummary {
+  type: 'summary';
+  data: {
+    total: number;
+    successful: number;
+    failed: number;
+  };
+}
+
+export type StreamingResult = IndexingResult | StreamingSummary;

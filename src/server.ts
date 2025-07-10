@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { serveStatic } from 'hono/bun';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { indexUrls } from './services/googleIndexing';
+import { streamSSE } from 'hono/streaming';
+import { indexUrls, indexUrlsStream } from './services/googleIndexing';
 
 const app = new Hono();
 
@@ -339,8 +340,12 @@ app.get('/', (c) => {
           loading.classList.add('show');
           results.classList.remove('show');
           
+          // Clear previous results
+          resultsContent.innerHTML = '';
+          
           try {
-            const response = await fetch('/api/index', {
+            // Make streaming request
+            const response = await fetch('/api/index/stream', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -348,18 +353,53 @@ app.get('/', (c) => {
               body: JSON.stringify({ urls }),
             });
             
-            const data = await response.json();
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || 'Failed to start processing');
+            }
+            
+            // Show results container
+            results.classList.add('show');
+            
+            // Process the streaming response
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              
+              const chunk = decoder.decode(value, { stream: true });
+              const lines = chunk.split('\\n');
+              
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const data = JSON.parse(line.substring(6));
+                    
+                    // Handle different event types based on the data structure
+                    if (data.url) {
+                      // This is a result for a specific URL
+                      addResultItem(data);
+                    } else if (data.total !== undefined) {
+                      // This is the summary
+                      updateSummary(data);
+                    } else if (data.message) {
+                      // This is a status message
+                      console.log('Status:', data.message);
+                    }
+                  } catch (e) {
+                    console.error('Error parsing SSE data:', e);
+                  }
+                } else if (line.startsWith('event: complete')) {
+                  console.log('Processing completed');
+                  break;
+                }
+              }
+            }
             
             // Hide loading
             loading.classList.remove('show');
-            
-            if (response.ok) {
-              // Show results
-              displayResults(data);
-              results.classList.add('show');
-            } else {
-              throw new Error(data.error || 'Failed to process URLs');
-            }
             
           } catch (error) {
             loading.classList.remove('show');
@@ -369,6 +409,44 @@ app.get('/', (c) => {
             submitBtn.textContent = '🚀 Submit URLs for Indexing';
           }
         });
+        
+        function addResultItem(result) {
+          const resultsContent = document.getElementById('resultsContent');
+          const isSuccess = result.success;
+          
+          const resultDiv = document.createElement('div');
+          resultDiv.className = \`result-item \${isSuccess ? '' : 'error'}\`;
+          resultDiv.innerHTML = \`
+            <div class="result-url">\${result.url}</div>
+            <div class="result-status \${isSuccess ? 'success' : 'error'}">
+              \${isSuccess ? '✅ Success' : '❌ ' + result.error}
+            </div>
+          \`;
+          
+          resultsContent.appendChild(resultDiv);
+        }
+        
+        function updateSummary(summary) {
+          const resultsContent = document.getElementById('resultsContent');
+          
+          // Remove existing summary if any
+          const existingSummary = resultsContent.querySelector('.summary');
+          if (existingSummary) {
+            existingSummary.remove();
+          }
+          
+          // Add new summary
+          const summaryDiv = document.createElement('div');
+          summaryDiv.className = 'summary';
+          summaryDiv.innerHTML = \`
+            <strong>📈 Summary:</strong> 
+            \${summary.successful} successful, 
+            \${summary.failed} failed, 
+            \${summary.total} total
+          \`;
+          
+          resultsContent.appendChild(summaryDiv);
+        }
         
         function displayResults(data) {
           const resultsContent = document.getElementById('resultsContent');
@@ -441,6 +519,73 @@ app.post('/api/index', async (c) => {
     });
   } catch (error) {
     console.error('Error processing indexing request:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// Streaming API endpoint for indexing URLs
+app.post('/api/index/stream', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { urls } = body;
+
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+      return c.json({ error: 'No URLs provided' }, 400);
+    }
+
+    // Validate URLs
+    const validUrls = urls.filter((url) => {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+
+    if (validUrls.length === 0) {
+      return c.json({ error: 'No valid URLs provided' }, 400);
+    }
+
+    // Set up Server-Sent Events
+    return streamSSE(c, async (stream) => {
+      try {
+        // Send initial message
+        await stream.writeSSE({
+          event: 'start',
+          data: JSON.stringify({ message: `Starting to process ${validUrls.length} URLs...` }),
+        });
+
+        // Process URLs with streaming
+        for await (const result of indexUrlsStream(validUrls)) {
+          if ('type' in result && result.type === 'summary') {
+            await stream.writeSSE({
+              event: 'summary',
+              data: JSON.stringify(result.data),
+            });
+          } else {
+            await stream.writeSSE({
+              event: 'result',
+              data: JSON.stringify(result),
+            });
+          }
+        }
+
+        // Send completion message
+        await stream.writeSSE({
+          event: 'complete',
+          data: JSON.stringify({ message: 'Processing completed' }),
+        });
+      } catch (error) {
+        console.error('Error in streaming:', error);
+        await stream.writeSSE({
+          event: 'error',
+          data: JSON.stringify({ error: 'Internal server error' }),
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error setting up streaming:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
 });
